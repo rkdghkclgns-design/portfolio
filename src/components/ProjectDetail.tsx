@@ -1,33 +1,41 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Play, FileText, Tag, Calendar, X, LayoutGrid, HelpCircle, ExternalLink, Sparkles, Calculator, MousePointer2, ChevronRight, ArrowLeft, ArrowRight, RotateCw, Lock, MoreVertical, Minus, Square } from 'lucide-react';
+import { Play, FileText, Tag, Calendar, X, LayoutGrid, HelpCircle, ExternalLink, Sparkles, Calculator, MousePointer2, ChevronRight, ArrowLeft, ArrowRight, RotateCw, Lock, MoreVertical, Minus, Square, Plus } from 'lucide-react';
 import type { Project } from '../types';
 import { EBookGallery } from './EBookGallery';
+import { EditImageButton } from './editKit';
 
 interface ProjectDetailProps {
   project: Project;
   onBack: () => void;
   isEditing?: boolean;
   onSaveContent?: (content: string) => void;
+  onUpdateProject?: (patch: Partial<Project>) => void;
 }
 
 type TabType = 'overview' | 'document' | 'video' | 'link' | 'simulator' | 'prototype';
 
-export const ProjectDetail = ({ project, onBack, isEditing, onSaveContent }: ProjectDetailProps) => {
+export const ProjectDetail = ({ project, onBack, isEditing, onSaveContent, onUpdateProject }: ProjectDetailProps) => {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
   const [currentPage, setCurrentPage] = useState(0);
   const [showThumbnailGrid, setShowThumbnailGrid] = useState(false);
+  const [showAddTab, setShowAddTab] = useState(false);
 
-  const tabs: { id: TabType; label: string; icon: React.ReactNode; show: boolean; color: string }[] = [
+  const upd = (patch: Partial<Project>) => onUpdateProject && onUpdateProject(patch);
+
+  // 탭 노출 여부: 필드가 정의(undefined가 아님)되면 노출 → 편집 모드에서 추가/삭제 가능
+  const tabs: { id: TabType; label: string; icon: React.ReactNode; show: boolean; color: string; add?: () => void; del?: () => void }[] = [
     { id: 'overview', label: '개요', icon: <LayoutGrid className="w-3.5 h-3.5" />, show: true, color: '#0047BB' },
-    { id: 'document', label: '기획서', icon: <FileText className="w-3.5 h-3.5" />, show: !!(project.gallery || project.pdfUrl), color: '#059669' },
-    { id: 'prototype', label: '프로토타입', icon: <Sparkles className="w-3.5 h-3.5" />, show: !!project.prototypeUrl, color: '#7C3AED' },
-    { id: 'video', label: '플레이 영상', icon: <Play className="w-3.5 h-3.5" />, show: !!project.videoUrl, color: '#EA580C' },
-    { id: 'link', label: '링크', icon: <ExternalLink className="w-3.5 h-3.5" />, show: !!project.externalUrl, color: '#2563EB' },
-    { id: 'simulator', label: '시뮬레이터', icon: <Calculator className="w-3.5 h-3.5" />, show: !!(project.simulatorUrl || project.hasSimulator || project.simulatorVideoUrl), color: '#DC2626' },
+    { id: 'document', label: '기획서', icon: <FileText className="w-3.5 h-3.5" />, show: project.gallery !== undefined || project.pdfUrl !== undefined, color: '#059669', add: () => upd({ gallery: [] }), del: () => upd({ gallery: undefined, pdfUrl: undefined }) },
+    { id: 'prototype', label: '프로토타입', icon: <Sparkles className="w-3.5 h-3.5" />, show: project.prototypeUrl !== undefined, color: '#7C3AED', add: () => upd({ prototypeUrl: '' }), del: () => upd({ prototypeUrl: undefined }) },
+    { id: 'video', label: '플레이 영상', icon: <Play className="w-3.5 h-3.5" />, show: project.videoUrl !== undefined, color: '#EA580C', add: () => upd({ videoUrl: '' }), del: () => upd({ videoUrl: undefined }) },
+    { id: 'link', label: '링크', icon: <ExternalLink className="w-3.5 h-3.5" />, show: project.externalUrl !== undefined, color: '#2563EB', add: () => upd({ externalUrl: '' }), del: () => upd({ externalUrl: undefined }) },
+    { id: 'simulator', label: '시뮬레이터', icon: <Calculator className="w-3.5 h-3.5" />, show: project.simulatorUrl !== undefined || !!project.hasSimulator || project.simulatorVideoUrl !== undefined, color: '#DC2626', add: () => upd({ simulatorVideoUrl: '' }), del: () => upd({ simulatorUrl: undefined, simulatorVideoUrl: undefined, hasSimulator: false }) },
   ];
 
   const visibleTabs = tabs.filter(t => t.show);
+  const addableTabs = tabs.filter(t => !t.show && t.add);
+  const delTab = (id: TabType) => { const t = tabs.find(x => x.id === id); if (t?.del) { t.del(); if (activeTab === id) setActiveTab('overview'); } };
 
   const galleryImages = project.gallery || [project.image];
 
@@ -55,26 +63,45 @@ export const ProjectDetail = ({ project, onBack, isEditing, onSaveContent }: Pro
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  style={{
-                    boxShadow: isActive ? `inset 0 2px 0 0 ${tab.color}` : undefined
-                  }}
+                  style={{ boxShadow: isActive ? `inset 0 2px 0 0 ${tab.color}` : undefined }}
                   className={`relative h-8 px-4 flex items-center gap-2 rounded-t-[8px] transition-colors min-w-[140px] max-w-[200px] border-x border-t ${
-                    isActive
-                      ? 'bg-white text-zinc-800 z-20 border-zinc-200'
-                      : 'bg-transparent text-zinc-600 border-transparent hover:bg-black/5'
+                    isActive ? 'bg-white text-zinc-800 z-20 border-zinc-200' : 'bg-transparent text-zinc-600 border-transparent hover:bg-black/5'
                   }`}
                 >
                   <span style={{ color: isActive ? tab.color : 'inherit' }} className="flex shrink-0">
                     {tab.icon}
                   </span>
-                  <span className="text-[11px] font-semibold truncate">{tab.label}</span>
-                  {/* Right side shadow/border blend for active tab */}
+                  <span className="text-[11px] font-semibold truncate flex-1">{tab.label}</span>
+                  {isEditing && tab.del && (
+                    <span role="button" title="탭 삭제" onClick={(e) => { e.stopPropagation(); delTab(tab.id); }}
+                      className="ml-1 -mr-2 w-4 h-4 inline-flex items-center justify-center rounded-full text-zinc-400 hover:bg-red-500 hover:text-white shrink-0">
+                      <X className="w-3 h-3" />
+                    </span>
+                  )}
                   {isActive && (
                     <div className="absolute -bottom-px left-0 right-0 h-[2px] bg-white" />
                   )}
                 </button>
               );
             })}
+            {isEditing && addableTabs.length > 0 && (
+              <div className="relative">
+                <button onClick={() => setShowAddTab((v) => !v)} title="탭 추가"
+                  className="h-8 px-3 flex items-center gap-1 rounded-t-[8px] text-zinc-500 hover:bg-black/5 text-[11px] font-bold border border-transparent">
+                  <Plus className="w-3.5 h-3.5" /> 탭
+                </button>
+                {showAddTab && (
+                  <div className="absolute top-full left-0 mt-1 z-[60] bg-white border border-zinc-200 rounded-xl shadow-xl p-1.5 min-w-[170px]">
+                    {addableTabs.map((t) => (
+                      <button key={t.id} onClick={() => { t.add && t.add(); setShowAddTab(false); setActiveTab(t.id); }}
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-zinc-50 text-left text-[12px] font-semibold text-zinc-700">
+                        <span style={{ color: t.color }} className="flex">{t.icon}</span> {t.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="flex-1" />
@@ -134,11 +161,34 @@ export const ProjectDetail = ({ project, onBack, isEditing, onSaveContent }: Pro
             <motion.div key="tab-document" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex flex-col min-h-0 overflow-hidden bg-zinc-950 relative"
             >
-              {project.gallery ? (
+              {isEditing && project.gallery !== undefined ? (
+                <div className="flex-1 overflow-auto p-8 bg-zinc-900">
+                  <div className="flex items-center gap-3 mb-5">
+                    <EditImageButton onPick={(url) => upd({ gallery: [...(project.gallery || []), url] })} label="기획서 페이지 추가" maxW={1400} maxH={2000} />
+                    <span className="text-white/50 text-sm">{(project.gallery || []).length} 페이지</span>
+                  </div>
+                  {(project.gallery || []).length === 0 ? (
+                    <div className="text-white/40 text-sm">이미지를 추가해 기획서 페이지를 구성하세요.</div>
+                  ) : (
+                    <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-3">
+                      {(project.gallery || []).map((img, i) => (
+                        <div key={i} className="relative group aspect-3/4 rounded-lg overflow-hidden border border-white/10 bg-black">
+                          <img src={img} alt={`page ${i + 1}`} className="w-full h-full object-cover" />
+                          <span className="absolute top-1 left-1 text-[10px] bg-black/70 text-white px-1.5 py-0.5 rounded">{i + 1}</span>
+                          <button onClick={() => upd({ gallery: (project.gallery || []).filter((_, k) => k !== i) })}
+                            className="absolute top-1 right-1 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : project.gallery && project.gallery.length > 0 ? (
                 <EBookGallery images={galleryImages} currentIndex={currentPage} onPageChange={setCurrentPage} />
               ) : project.pdfUrl ? (
-                <iframe 
-                  src={`${project.pdfUrl}#toolbar=0`} 
+                <iframe
+                  src={`${project.pdfUrl}#toolbar=0`}
                   className="w-full h-full border-0"
                   title="PDF Viewer"
                 />
@@ -148,7 +198,7 @@ export const ProjectDetail = ({ project, onBack, isEditing, onSaveContent }: Pro
                 </div>
               )}
               
-              {project.gallery && (
+              {project.gallery && project.gallery.length > 0 && !isEditing && (
                 <div className="absolute bottom-10 left-10 right-10 flex justify-between items-end pointer-events-none z-50">
                   <div className="pointer-events-auto flex flex-col items-start gap-3">
                     {/* Page Counter Pill (Top) */}
@@ -195,6 +245,11 @@ export const ProjectDetail = ({ project, onBack, isEditing, onSaveContent }: Pro
               className="flex-1 flex items-center justify-center p-12 bg-zinc-950"
             >
               <div className="max-w-2xl w-full">
+                {isEditing && (
+                  <input value={project.externalUrl || ''} onChange={(e) => upd({ externalUrl: e.target.value })}
+                    placeholder="링크 URL (https://...)"
+                    className="mb-4 w-full px-4 py-2.5 rounded-xl bg-white/10 text-white text-sm border border-white/20 focus:outline-none focus:border-white/50 placeholder:text-white/40" />
+                )}
                 <div className="relative group p-1 bg-linear-to-br from-[#6D28D9] via-[#C084FC] to-[#6D28D9] rounded-[3rem] shadow-2xl overflow-hidden">
                   <div className="absolute inset-0 bg-zinc-900/40 backdrop-blur-3xl" />
                   <div className="relative bg-zinc-900/80 rounded-[2.8rem] p-12 flex flex-col items-center text-center border border-white/5">
@@ -223,9 +278,14 @@ export const ProjectDetail = ({ project, onBack, isEditing, onSaveContent }: Pro
               className="flex-1 bg-[#0a0a0a] relative overflow-hidden flex flex-col lg:flex-row"
             >
               {/* Subtle dot grid */}
-              <div className="absolute inset-0 opacity-[0.04] pointer-events-none" 
-                style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '28px 28px' }} 
+              <div className="absolute inset-0 opacity-[0.04] pointer-events-none"
+                style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '28px 28px' }}
               />
+              {isEditing && (
+                <input value={project.prototypeUrl || ''} onChange={(e) => upd({ prototypeUrl: e.target.value })}
+                  placeholder="프로토타입 URL (임베드 가능한 주소)"
+                  className="absolute top-4 left-1/2 -translate-x-1/2 z-50 w-[80%] max-w-xl px-4 py-2 rounded-xl bg-white/10 text-white text-sm border border-white/20 focus:outline-none focus:border-white/50 placeholder:text-white/40" />
+              )}
 
               {/* Left Side: Info */}
               <div className="w-full lg:w-[380px] p-10 lg:p-14 relative z-10 flex flex-col justify-center gap-8 border-r border-white/5">
@@ -311,6 +371,12 @@ export const ProjectDetail = ({ project, onBack, isEditing, onSaveContent }: Pro
             <motion.div key="tab-simulator" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex flex-col min-h-0 bg-[#0B0C10] overflow-hidden"
             >
+              {isEditing && (
+                <div className="p-3 bg-black/40 border-b border-white/10 flex flex-col sm:flex-row gap-2">
+                  <input value={project.simulatorVideoUrl || ''} onChange={(e) => upd({ simulatorVideoUrl: e.target.value })} placeholder="시뮬레이터 영상 URL (YouTube)" className="flex-1 px-3 py-2 rounded-lg bg-white/10 text-white text-xs border border-white/20 focus:outline-none focus:border-white/50 placeholder:text-white/40" />
+                  <input value={project.simulatorUrl || ''} onChange={(e) => upd({ simulatorUrl: e.target.value })} placeholder="시뮬레이터 실행 URL" className="flex-1 px-3 py-2 rounded-lg bg-white/10 text-white text-xs border border-white/20 focus:outline-none focus:border-white/50 placeholder:text-white/40" />
+                </div>
+              )}
               <div className="flex-1 flex flex-col lg:flex-row min-h-0">
                 {/* Left: Code Explorer */}
                 <div className="flex-1 border-r border-white/5 flex flex-col min-h-0 bg-black/20">
@@ -418,8 +484,17 @@ def calculate_balance(params):
             <motion.div key="tab-video" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               className="flex-1 flex flex-col p-8 bg-zinc-900"
             >
+              {isEditing && (
+                <input value={project.videoUrl || ''} onChange={(e) => upd({ videoUrl: e.target.value })}
+                  placeholder="YouTube 영상 URL (예: https://www.youtube.com/watch?v=XXXX)"
+                  className="mb-3 w-full px-4 py-2.5 rounded-xl bg-white/10 text-white text-sm border border-white/20 focus:outline-none focus:border-white/50 placeholder:text-white/40" />
+              )}
               <div className="flex-1 rounded-2xl overflow-hidden bg-black shadow-2xl relative group border border-white/5">
-                <iframe src={project.videoUrl?.replace('watch?v=', 'embed/')} className="w-full h-full border-0" allowFullScreen />
+                {project.videoUrl ? (
+                  <iframe src={project.videoUrl.replace('watch?v=', 'embed/')} className="w-full h-full border-0" allowFullScreen />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-white/40 text-sm">영상 URL을 입력하세요.</div>
+                )}
               </div>
             </motion.div>
           ) : (
@@ -435,6 +510,11 @@ def calculate_balance(params):
                   className={`w-full h-full transition-transform duration-700 hover:scale-[1.03] ${project.image ? 'object-cover' : 'object-contain p-16 bg-zinc-100'}`}
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
+                {isEditing && onUpdateProject && (
+                  <div className="absolute top-6 right-8 z-20" onClick={(e) => e.stopPropagation()}>
+                    <EditImageButton onPick={(url) => upd({ image: url })} label="대표 이미지 변경" maxW={1400} maxH={800} />
+                  </div>
+                )}
                 <div className="absolute top-6 left-8 flex flex-wrap gap-2">
                   {project.roles.map(role => (
                     <span key={role} className="px-3 py-1.5 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white text-[10px] font-black uppercase tracking-widest">{role}</span>

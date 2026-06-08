@@ -112,6 +112,7 @@ export interface ResumeData {
     role: string;
     rank: string;
     status: string;
+    hidden?: boolean; // 이력서 노출 여부 (true면 숨김)
   };
   tools?: {
     name: string;

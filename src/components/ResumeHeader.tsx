@@ -39,7 +39,7 @@ export const ResumeHeader = ({ data, setData, isEditing, isGeneratingPdf }: Resu
           <EditableText value={data.role} onSave={(v) => setData({...data, role: v})} isEditing={isEditing} />
         </p>
         
-        <div className="max-w-2xl text-[16px] lg:text-[17px] text-[#2C2C2C] leading-[1.75] font-medium [&_strong]:text-[#0047BB] [&_strong]:font-black [&_strong]:text-[17px] lg:[&_strong]:text-[18px] [&_strong]:bg-[#0047BB]/5 [&_strong]:px-1.5 [&_strong]:py-0.5 [&_strong]:rounded-md break-keep">
+        <div className={`${isEditing ? 'w-full' : 'max-w-2xl'} text-[16px] lg:text-[17px] text-[#2C2C2C] leading-[1.75] font-medium [&_strong]:text-[#0047BB] [&_strong]:font-black [&_strong]:text-[17px] lg:[&_strong]:text-[18px] [&_strong]:bg-[#0047BB]/5 [&_strong]:px-1.5 [&_strong]:py-0.5 [&_strong]:rounded-md break-keep`}>
           <EditableText value={data.summary} onSave={(v) => setData({...data, summary: v})} isEditing={isEditing} markdown={true} />
         </div>
 
@@ -87,19 +87,27 @@ export const ResumeHeader = ({ data, setData, isEditing, isGeneratingPdf }: Resu
               </div>
             </div>
           )}
-          {(isEditing || data.military) && (
+          {(isEditing || (data.military && !data.military.hidden)) && (
             <div className="flex items-center gap-2.5 group">
               <Shield className="w-4 h-4 text-[#0047BB] shrink-0" strokeWidth={2} />
               <div className="flex flex-col">
                 <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">병역</span>
                 {isEditing ? (
-                  <div className="flex gap-1 flex-wrap mt-0.5">
-                    {(['branch', 'rank', 'status'] as const).map((f) => (
-                      <input key={f} value={(data.military as any)?.[f] || ''}
-                        placeholder={f === 'branch' ? '군별' : f === 'rank' ? '계급' : '상태'}
-                        onChange={(e) => setData({ ...data, military: { branch: '', role: '', rank: '', status: '', ...(data.military || {}), [f]: e.target.value } })}
-                        className="w-16 border border-zinc-300 rounded px-1.5 py-0.5 text-[12px] bg-white text-[#1A1A1A] focus:border-[#0047BB] focus:outline-none" />
-                    ))}
+                  <div className="flex flex-col gap-1.5 mt-0.5">
+                    <div className="flex gap-1 flex-wrap">
+                      {(['branch', 'rank', 'status'] as const).map((f) => (
+                        <input key={f} value={(data.military as any)?.[f] || ''}
+                          placeholder={f === 'branch' ? '군별' : f === 'rank' ? '계급' : '상태'}
+                          onChange={(e) => setData({ ...data, military: { branch: '', role: '', rank: '', status: '', ...(data.military || {}), [f]: e.target.value } })}
+                          className="w-16 border border-zinc-300 rounded px-1.5 py-0.5 text-[12px] bg-white text-[#1A1A1A] focus:border-[#0047BB] focus:outline-none" />
+                      ))}
+                    </div>
+                    <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                      <input type="checkbox" checked={!(data.military && data.military.hidden)}
+                        onChange={(e) => setData({ ...data, military: { branch: '', role: '', rank: '', status: '', ...(data.military || {}), hidden: !e.target.checked } })}
+                        className="accent-[#0047BB] w-3.5 h-3.5" />
+                      <span className="text-[11px] text-zinc-500">이력서에 노출</span>
+                    </label>
                   </div>
                 ) : (
                   <span className="text-[13px] text-[#1A1A1A] font-semibold">{data.military!.branch} {data.military!.rank} {data.military!.status}</span>

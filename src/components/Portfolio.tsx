@@ -167,6 +167,11 @@ export const Portfolio = ({ isEditing, projects, setProjects, onBack, initialPro
                       const i = p.findIndex(pp => pp.id === selectedProject.id);
                       if (i !== -1) { p[i].content = c; setProjects(p); setSelectedProject({ ...selectedProject, content: c }); }
                     }}
+                    onUpdateProject={(patch) => {
+                      const p = [...projects];
+                      const i = p.findIndex(pp => pp.id === selectedProject.id);
+                      if (i !== -1) { p[i] = { ...p[i], ...patch }; setProjects(p); setSelectedProject({ ...selectedProject, ...patch }); }
+                    }}
                   />
                 </div>
               </motion.div>
