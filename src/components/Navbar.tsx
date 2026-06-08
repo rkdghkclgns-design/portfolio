@@ -140,12 +140,7 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
             ) : (
               /* Home: section nav links */
               <div className="flex items-center justify-center gap-2">
-                {[
-                  { id: 'about', label: '소개', num: '01' },
-                  { id: 'projects', label: '프로젝트 이력', num: '02' },
-                  { id: 'skills', label: '핵심역량', num: '03' },
-                  { id: 'play-history', label: '플레이 이력', num: '04' }
-                ].map(({ id, label, num }) => (
+                {([] as { id: string; label: string; num: string }[]).map(({ id, label, num }) => (
                   <a
                     key={id}
                     href={`#${id}`}
@@ -218,7 +213,7 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
                   </button>
                 ))}
               </div>
-              {!isSubView && (
+              {false && (
                 <div className="flex flex-col gap-2">
                   <span className="text-[10px] font-mono tracking-widest uppercase text-zinc-500 px-4 mb-1">Navigation</span>
                   {[

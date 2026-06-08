@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
-import { Plus, Download, RotateCcw, ChevronRight, ArrowUpRight } from 'lucide-react';
+import { Plus, Download, RotateCcw, Sparkles, ChevronRight, ArrowUpRight } from 'lucide-react';
 
 /**
  * MindMap — 자기 성찰용 마인드맵 캔버스 (홈 첫 화면)
  * - 스킬/장점/단점/가치관/목표 등 카테고리별 노드 추가
  * - 노드마다 + 버튼으로 하위 토픽(자식) 추가 (가지 색 상속, 다단계 가능)
+ *   예) 나 > 즐겨하는 게임 > PC > MMORPG > 로스트아크 > 1000시간
  * - 드래그 이동, 더블클릭 편집, ✕ 삭제(하위 토픽 포함)
- * - localStorage 자동 저장
- * - PNG 내보내기 (순수 SVG → Canvas, 외부 의존성 없음)
+ * - 예시 불러오기 / 초기화('나'만 남김)
+ * - localStorage 자동 저장, PNG 내보내기 (순수 SVG → Canvas)
  */
 
 interface MindMapProps {
@@ -71,15 +72,38 @@ function geomOf(text: string, opts: { fs: number; weight: number; lh: number; pa
 const nodeGeom = (t: string) => geomOf(t, { fs: 14, weight: 600, lh: 19, padX: 14, padY: 9, maxW: 200, minW: 64 });
 const centerGeom = (t: string) => geomOf(t, { fs: 20, weight: 800, lh: 26, padX: 20, padY: 13, maxW: 180, minW: 90 });
 
-function seed(w: number, h: number): MData {
+/* 빈 상태: '나'만 */
+function buildEmpty(w: number, h: number): MData {
+  return { center: { text: '나', x: w / 2, y: h / 2 }, nodes: [] };
+}
+
+/* 입력 예시: 나 > 즐겨하는 게임 > PC > MMORPG > 로스트아크 > 1000시간 (+ 다른 가지) */
+function buildExample(w: number, h: number): MData {
   const cx = w / 2, cy = h / 2;
-  const ex: [string, string][] = [
-    ['기획 역량', '스킬'], ['끈기', '장점'], ['완벽주의', '단점'], ['성장', '가치관'], ['게임 출시', '목표'],
+  const sx = Math.min(1, (w / 2 - 50) / 580);
+  const sy = Math.min(1, (h / 2 - 40) / 240);
+  const P = (dx: number, dy: number) => ({ x: clamp(cx + dx * sx, 60, w - 60), y: clamp(cy + dy * sy, 50, h - 50) });
+  // [key, text, cat, parentKey, dx, dy]
+  const defs: [string, string, string, string, number, number][] = [
+    ['g', '즐겨하는 게임', '관심사', 'center', -160, 50],
+    ['pc', 'PC', '관심사', 'g', -330, 0],
+    ['mo', '모바일', '관심사', 'g', -250, 165],
+    ['mmo', 'MMORPG', '관심사', 'pc', -500, -55],
+    ['la', '로스트아크', '관심사', 'mmo', -560, 70],
+    ['hr', '1000시간', '관심사', 'la', -460, 175],
+    ['sk', '스킬', '스킬', 'center', 210, -95],
+    ['sk1', '시스템 기획', '스킬', 'sk', 400, -120],
+    ['me', '장점', '장점', 'center', 210, 100],
+    ['me1', '끈기', '장점', 'me', 400, 130],
   ];
-  const nodes: MNode[] = ex.map(([text, cat], i) => {
-    const a = i * 2.39996; const R = 175;
-    return { id: 'seed' + i, text, cat, parent: 'center', x: clamp(cx + R * Math.cos(a), 70, w - 70), y: clamp(cy + R * Math.sin(a), 56, h - 56) };
-  });
+  const idmap: Record<string, string> = { center: 'center' };
+  const nodes: MNode[] = [];
+  for (const [key, text, cat, pkey, dx, dy] of defs) {
+    const id = 'ex_' + key;
+    idmap[key] = id;
+    const p = P(dx, dy);
+    nodes.push({ id, text, cat, parent: idmap[pkey] || 'center', x: p.x, y: p.y });
+  }
   return { center: { text: '나', x: cx, y: cy }, nodes };
 }
 
@@ -103,7 +127,7 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
     return () => ro.disconnect();
   }, []);
 
-  /* 데이터 초기화 (저장본 우선, 구버전 호환: parent 없으면 center) */
+  /* 데이터 초기화 (저장본 우선, 없으면 예시. 구버전 호환: parent 없으면 center) */
   useEffect(() => {
     if (data || size.w === 0) return;
     try {
@@ -116,7 +140,7 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
         }
       }
     } catch { /* ignore */ }
-    setData(seed(size.w, size.h));
+    setData(buildExample(size.w, size.h));
   }, [size, data]);
 
   /* 자동 저장 */
@@ -209,9 +233,17 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
     if (editing === id) setEditing(null);
   };
 
+  /* 초기화: '나'만 남기고 비움 */
   const reset = () => {
-    if (!confirm('마인드맵을 초기화할까요? 현재 내용이 모두 사라집니다.')) return;
-    setData(seed(size.w, size.h));
+    if (!confirm("‘나’만 남기고 모두 비울까요? 현재 내용이 사라집니다.")) return;
+    setData(buildEmpty(size.w, size.h));
+    setEditing(null);
+  };
+
+  /* 예시 불러오기 */
+  const loadExample = () => {
+    if (data && data.nodes.length > 0 && !confirm('예시 마인드맵을 불러올까요? 현재 내용이 대체됩니다.')) return;
+    setData(buildExample(size.w, size.h));
     setEditing(null);
   };
 
@@ -251,9 +283,9 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
 
   /* 작은 원형 버튼 (하위토픽 +, 삭제 ✕) — 화면 전용 */
   const miniBtn = (
-    cx: number, cy: number, kind: 'add' | 'del', color: string, onClick: () => void, title: string,
+    bx: number, by: number, kind: 'add' | 'del', color: string, onClick: () => void, title: string,
   ) => (
-    <g className="no-export" transform={`translate(${cx},${cy})`} style={{ cursor: 'pointer' }}
+    <g className="no-export" transform={`translate(${bx},${by})`} style={{ cursor: 'pointer' }}
       onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onClick(); }}>
       <title>{title}</title>
       {kind === 'add'
@@ -323,7 +355,7 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
   };
 
   return (
-    <section id="hero" className="relative min-h-screen flex flex-col px-4 md:px-8 pt-28 pb-10 overflow-hidden bg-transparent border-b border-black/10">
+    <section id="hero" className="relative min-h-screen flex flex-col px-4 md:px-8 pt-28 pb-10 overflow-hidden bg-transparent">
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-linear-to-r from-transparent via-[#0047BB]/30 to-transparent" />
 
       <div className="max-w-7xl mx-auto w-full flex flex-col flex-1 min-h-0">
@@ -366,6 +398,10 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
             className="px-4 py-1.5 rounded-full text-xs font-bold bg-[#0047BB] text-white flex items-center gap-1.5 hover:bg-[#003399] transition shadow-md shadow-[#0047BB]/20">
             <Download className="w-3.5 h-3.5" /> PNG 내보내기
           </button>
+          <button onClick={loadExample}
+            className="px-3 py-1.5 rounded-full text-xs font-bold bg-white border border-zinc-200 text-zinc-600 flex items-center gap-1 hover:text-[#0047BB] hover:border-[#0047BB]/30 transition">
+            <Sparkles className="w-3.5 h-3.5" /> 예시
+          </button>
           <button onClick={reset}
             className="px-3 py-1.5 rounded-full text-xs font-bold bg-white border border-zinc-200 text-zinc-500 flex items-center gap-1 hover:text-zinc-800 transition">
             <RotateCcw className="w-3.5 h-3.5" /> 초기화
@@ -406,7 +442,7 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
 
           {data && data.nodes.length === 0 && (
             <div className="absolute inset-0 flex items-end justify-center pb-10 pointer-events-none">
-              <span className="text-zinc-400 text-sm">카테고리를 고르고 <b className="text-zinc-500">‘주제 추가’</b>를 눌러 시작하세요.</span>
+              <span className="text-zinc-400 text-sm"><b className="text-zinc-500">‘주제 추가’</b> 또는 <b className="text-zinc-500">‘예시’</b>로 시작하세요.</span>
             </div>
           )}
         </div>

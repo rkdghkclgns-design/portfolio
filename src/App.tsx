@@ -221,16 +221,12 @@ function App() {
         centerSlot={centerSlot}
         isGeneratingPdf={isGeneratingPdf}
       />
-      <RightRail view={view} onNavClick={handleNavClick} activeSection={activeSection} />
+      {view !== 'home' && <RightRail view={view} onNavClick={handleNavClick} activeSection={activeSection} />}
 
       {view === 'home' && (
         <main className="relative">
+          {/* 자기 성찰 마인드맵만 노출 (아래 소개/프로젝트/역량/플레이이력/문의 섹션은 숨김) */}
           <MindMap onPortfolioClick={() => changeView('portfolio')} onResumeClick={() => changeView('resume')} />
-          <About isEditing={isEditing} content={aboutContent} setContent={setAboutContent} />
-          <Projects onProjectClick={(p) => { setTargetProjectId(p.id); changeView('portfolio'); }} isEditing={isEditing} projects={projectsData} setProjects={setProjectsData} limit={3} setView={changeView} />
-          <Skills isEditing={isEditing} skills={skillsData} setSkills={setSkillsData} />
-          <PlayHistory isEditing={isEditing} history={gameHistory} setHistory={setGameHistory} onViewAll={() => changeView('game-history')} />
-          <Contact />
         </main>
       )}
 
@@ -276,7 +272,7 @@ function App() {
         />
       )}
 
-      <Footer />
+      {view !== 'home' && <Footer />}
     </div>
 
     </>
