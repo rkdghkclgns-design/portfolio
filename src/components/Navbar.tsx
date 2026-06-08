@@ -102,7 +102,8 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
 
           {/* ── LEFT ── */}
           <div className="flex shrink-0 items-center gap-3 min-w-[200px]">
-            {isSubView && onBack ? (
+            {/* 모든 페이지에서 동일하게 로고를 노출 (서브페이지에서도 뒤로가기 버튼 대신 로고 유지) */}
+            {false ? (
               <button
                 onClick={onBack}
                 className="flex items-center gap-2.5 px-4 py-2 rounded-full bg-zinc-100 hover:bg-zinc-200 border border-black/6 text-zinc-600 hover:text-[#0047BB] font-bold text-sm transition-all duration-200 group"

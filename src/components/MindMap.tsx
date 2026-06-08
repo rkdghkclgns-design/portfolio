@@ -270,6 +270,9 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
   };
 
   const delNode = (id: string) => {
+    // 하위 항목이 있으면 함께 삭제됨을 안내하고 승인받음 (최하위 노드는 바로 삭제)
+    const hasChildren = !!data && data.nodes.some((n) => (n.parent || 'center') === id);
+    if (hasChildren && !confirm('이 항목을 삭제하면 하위 항목도 모두 함께 삭제됩니다.\n계속하시겠어요?')) return;
     setData((prev) => {
       if (!prev) return prev;
       const toDel = new Set([id]); let changed = true;
