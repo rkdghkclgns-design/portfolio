@@ -116,5 +116,6 @@ export interface ResumeData {
   tools?: {
     name: string;
     description: string;
+    icon?: string; // 사용자 업로드 아이콘 (dataURL)
   }[];
 }

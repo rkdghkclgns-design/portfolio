@@ -454,7 +454,16 @@ def calculate_balance(params):
                       <div className="w-1 h-5 bg-[#0047BB] rounded-full" />
                       <span className="text-xs font-black text-zinc-400 uppercase tracking-widest">기획 의도 및 핵심 내용</span>
                     </div>
-                    <div className="text-zinc-600 leading-[1.9] text-[15px] whitespace-pre-wrap font-medium">{project.content}</div>
+                    {isEditing && onSaveContent ? (
+                      <textarea
+                        value={project.content}
+                        onChange={(e) => onSaveContent(e.target.value)}
+                        className="w-full min-h-[440px] text-zinc-700 leading-[1.9] text-[15px] font-medium bg-[#0047BB]/[0.04] border border-[#0047BB]/30 rounded-lg p-4 focus:outline-none focus:border-[#0047BB] resize-y"
+                        placeholder="프로젝트 상세 내용을 입력하세요 (줄바꿈/마크다운 지원)"
+                      />
+                    ) : (
+                      <div className="text-zinc-600 leading-[1.9] text-[15px] whitespace-pre-wrap font-medium">{project.content}</div>
+                    )}
                   </div>
 
                   {/* Sidebar 1/3 */}

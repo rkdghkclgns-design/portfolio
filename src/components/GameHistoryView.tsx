@@ -32,6 +32,19 @@ const CHART_DATA = [
 
 const catKey = (c: string) => (c === 'Mobile' ? 'mobile' : c === 'Console' ? 'console' : 'pc');
 
+const GENRE_OPTIONS = ['RPG', 'MMORPG', '액션 RPG', '액션', '어드벤처', '퍼즐', '전략', '시뮬레이션', '슈팅', 'FPS', 'TPS', '리듬', '스포츠', '레이싱', '캐주얼', 'TCG', '로그라이크', '공포', '격투', '배틀로얄', 'AOS', '보드게임', '기타'];
+
+// 정수 시간 → 720시간(=1개월) 초과 시 개월로 표기 (예: 1000 → "1개월 280시간")
+const formatPlayTime = (pt: any): string => {
+  if (pt == null || pt === '') return '';
+  const digits = String(pt).replace(/[^0-9]/g, '');
+  if (!digits) return String(pt);
+  const h = parseInt(digits, 10);
+  if (h < 720) return h.toLocaleString() + '시간';
+  const m = Math.floor(h / 720), r = h - m * 720;
+  return r ? `${m}개월 ${r.toLocaleString()}시간` : `${m}개월`;
+};
+
 export const GameHistoryView = ({ onBack, history, setHistory, isEditing = false }: GameHistoryViewProps) => {
   const [isIntroActive, setIsIntroActive] = useState(() => {
     if (isEditing) return false;
@@ -207,12 +220,20 @@ export const GameHistoryView = ({ onBack, history, setHistory, isEditing = false
                       <select value={game.category} onChange={(e) => updateGame(game.id, { category: e.target.value })} className={`${inputCls} w-[88px]`}>
                         <option value="PC">PC</option><option value="Console">Console</option><option value="Mobile">Mobile</option>
                       </select>
-                      <input value={game.genre || ''} placeholder="장르" onChange={(e) => updateGame(game.id, { genre: e.target.value })} className={`${inputCls} flex-1 min-w-0`} />
+                      <select value={game.genre || ''} onChange={(e) => updateGame(game.id, { genre: e.target.value })} className={`${inputCls} flex-1 min-w-0`}>
+                        {!game.genre && <option value="">장르 선택</option>}
+                        {game.genre && !GENRE_OPTIONS.includes(game.genre) && <option value={game.genre}>{game.genre}</option>}
+                        {GENRE_OPTIONS.map((g) => <option key={g} value={g}>{g}</option>)}
+                      </select>
                     </div>
                     <input value={game.title || ''} placeholder="게임명" onChange={(e) => updateGame(game.id, { title: e.target.value })} className={`${inputCls} font-bold`} />
                     <div className="flex gap-1.5">
                       <input value={game.company || ''} placeholder="제작사" onChange={(e) => updateGame(game.id, { company: e.target.value })} className={`${inputCls} flex-1 min-w-0`} />
-                      <input value={game.playTime || ''} placeholder="플레이타임" onChange={(e) => updateGame(game.id, { playTime: e.target.value })} className={`${inputCls} w-[92px]`} />
+                      <input type="number" min={0} step={1} inputMode="numeric"
+                        value={String(game.playTime || '').replace(/[^0-9]/g, '')}
+                        placeholder="시간(정수)"
+                        onChange={(e) => updateGame(game.id, { playTime: e.target.value.replace(/[^0-9]/g, '') })}
+                        className={`${inputCls} w-[96px]`} title="플레이타임을 정수(시간)로 입력 · 720시간 초과 시 개월로 표기" />
                     </div>
                   </div>
                   <DelButton onClick={() => deleteGame(game.id)} className="absolute top-2 right-2" title="이 게임 삭제" />
@@ -240,7 +261,7 @@ export const GameHistoryView = ({ onBack, history, setHistory, isEditing = false
                       </div>
                       <div className="flex items-center justify-between mt-auto pt-2">
                         <span className="text-[10px] font-bold text-white/60 truncate max-w-[60%]">{game.company}</span>
-                        {game.playTime && <span className="text-[10px] font-black text-yellow-400 drop-shadow-md">{game.playTime}</span>}
+                        {formatPlayTime(game.playTime) && <span className="text-[10px] font-black text-yellow-400 drop-shadow-md">{formatPlayTime(game.playTime)}</span>}
                       </div>
                     </div>
                   </motion.div>

@@ -2,7 +2,7 @@ import React from 'react';
 import { Wrench } from 'lucide-react';
 import { BRAND_ICONS } from './icons/BrandIcons';
 import { EditableText } from './EditableText';
-import { AddRowButton, DelButton } from './editKit';
+import { AddRowButton, DelButton, EditImageButton } from './editKit';
 import type { ResumeData } from '../types';
 
 interface ResumeToolsProps {
@@ -15,7 +15,7 @@ export const ResumeTools = ({ data, setData, isEditing = false }: ResumeToolsPro
   const tools = data.tools || [];
   if (tools.length === 0 && !isEditing) return null;
 
-  const update = (i: number, patch: Partial<{ name: string; description: string }>) => {
+  const update = (i: number, patch: Partial<{ name: string; description: string; icon: string }>) => {
     if (!setData) return;
     const t = tools.map((x, idx) => (idx === i ? { ...x, ...patch } : x));
     setData({ ...data, tools: t });
@@ -31,8 +31,16 @@ export const ResumeTools = ({ data, setData, isEditing = false }: ResumeToolsPro
       <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-6">
         {tools.map((tool, idx) => (
           <div key={idx} className="flex items-start gap-4 group">
-            <div className="text-[#1A1A1A] shrink-0 pt-1">
-              {BRAND_ICONS[tool.name] || <Wrench className="w-8 h-8 text-zinc-400" />}
+            <div className="shrink-0 pt-1 flex flex-col items-center gap-1">
+              <div className="w-8 h-8 flex items-center justify-center text-[#1A1A1A]">
+                {tool.icon
+                  ? <img src={tool.icon} alt="" className="w-8 h-8 object-contain rounded" />
+                  : (BRAND_ICONS[tool.name] || <Wrench className="w-8 h-8 text-zinc-400" />)}
+              </div>
+              {isEditing && (
+                <EditImageButton onPick={(url) => update(idx, { icon: url })} label="" maxW={128} maxH={128}
+                  className="!px-1 !py-0.5 !text-[9px] !gap-0.5" />
+              )}
             </div>
             <div className="flex flex-col gap-1 flex-1 min-w-0">
               <div className="flex items-center gap-2">
