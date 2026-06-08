@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="208" height="48" viewBox="0 0 208 48" role="img" aria-label="홍길동 · 게임 기획자">
+  <defs>
+    <linearGradient id="hgdBadge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0047BB"/>
+      <stop offset="1" stop-color="#002B6E"/>
+    </linearGradient>
+  </defs>
+  <!-- 노드 그래프 뱃지 (마인드맵/시스템 설계 모티프 · 오리지널) -->
+  <rect x="0" y="4" width="40" height="40" rx="13" fill="url(#hgdBadge)"/>
+  <g stroke="#FFFFFF" stroke-width="1.7" stroke-linecap="round" opacity="0.95">
+    <line x1="20" y1="24" x2="11" y2="15"/>
+    <line x1="20" y1="24" x2="29" y2="15"/>
+    <line x1="20" y1="24" x2="20" y2="35"/>
+  </g>
+  <circle cx="20" cy="24" r="4.4" fill="#FFFFFF"/>
+  <circle cx="11" cy="15" r="2.7" fill="#FFFFFF"/>
+  <circle cx="29" cy="15" r="2.7" fill="#FFFFFF"/>
+  <circle cx="20" cy="35" r="2.7" fill="#FFFFFF"/>
+  <!-- 워드마크 -->
+  <text x="52" y="24" font-family="Pretendard, 'Malgun Gothic', 'Apple SD Gothic Neo', sans-serif" font-size="18" font-weight="800" fill="#1A2332">홍길동</text>
+  <text x="53" y="38" font-family="ui-monospace, 'JetBrains Mono', monospace" font-size="8.5" letter-spacing="2.5" font-weight="700" fill="#98A0AC">GAME DESIGNER</text>
+</svg>

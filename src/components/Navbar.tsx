@@ -31,8 +31,11 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [scrolledPastHero, setScrolledPastHero] = useState(false);
   // 로고 이미지: public/images/logo.png 가 있으면 사용, 없으면 이름 표시
+  // 로고: 사용자 logo.png(있으면) → 오리지널 logo.svg → 이름 순으로 표시
   const [logoOk, setLogoOk] = useState(false);
-  const LOGO_SRC = ((import.meta as any).env?.BASE_URL || '/') + 'images/logo.png';
+  const LOGO_BASE = ((import.meta as any).env?.BASE_URL || '/') + 'images/';
+  const LOGO_SRCS = [LOGO_BASE + 'logo.png', LOGO_BASE + 'logo.svg'];
+  const [logoIdx, setLogoIdx] = useState(0);
 
   const isSubView = currentView !== 'home';
 
@@ -116,7 +119,8 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
             ) : (
               /* Home: 로고 (logo.png 있으면 이미지, 없으면 이름) */
               <div className="flex items-center gap-3 cursor-pointer group" onClick={(e) => handleLinkClick(e, 'hero-top')}>
-                <img src={LOGO_SRC} alt="로고" onLoad={() => setLogoOk(true)} onError={() => setLogoOk(false)}
+                <img src={LOGO_SRCS[logoIdx]} alt="로고" onLoad={() => setLogoOk(true)}
+                  onError={() => { setLogoOk(false); setLogoIdx((i) => (i < LOGO_SRCS.length - 1 ? i + 1 : i)); }}
                   style={{ display: logoOk ? 'block' : 'none' }}
                   className="h-10 md:h-12 w-auto max-w-[220px] object-contain transition-transform group-hover:scale-[1.03]" />
                 {!logoOk && (
