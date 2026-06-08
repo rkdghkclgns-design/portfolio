@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FileText, FolderOpen, Gamepad2, Home, Lock, Menu, X, ArrowLeft } from 'lucide-react';
+import { FileText, FolderOpen, Gamepad2, Home, Lock, Menu, X, ArrowLeft, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { PasswordModal } from './PasswordModal';
 
@@ -30,6 +30,9 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [scrolledPastHero, setScrolledPastHero] = useState(false);
+  // 로고 이미지: public/images/logo.png 가 있으면 사용, 없으면 이름 표시
+  const [logoOk, setLogoOk] = useState(false);
+  const LOGO_SRC = ((import.meta as any).env?.BASE_URL || '/') + 'images/logo.png';
 
   const isSubView = currentView !== 'home';
 
@@ -111,15 +114,22 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
                 <span>이전 화면으로 돌아가기</span>
               </button>
             ) : (
-              /* Home: 로고 */
+              /* Home: 로고 (logo.png 있으면 이미지, 없으면 이름) */
               <div className="flex items-center gap-3 cursor-pointer group" onClick={(e) => handleLinkClick(e, 'hero-top')}>
-                <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-linear-to-br from-[#0047BB] to-[#003080] text-white flex items-center justify-center shadow-lg shadow-[#0047BB]/25 transition-all group-hover:scale-105 group-hover:shadow-[#0047BB]/40 group-hover:shadow-xl">
-                  <Home className="w-5 h-5 md:w-6 md:h-6 transition-transform group-hover:-translate-y-0.5" strokeWidth={2} />
-                </div>
-                <div className="flex flex-col justify-center">
-                  <span className="font-display font-bold tracking-tight text-[16px] md:text-[18px] text-[#2C2C2C] group-hover:text-[#0047BB] transition-colors leading-none">홍길동</span>
-                  <span className="text-[10px] md:text-[11px] font-mono tracking-widest uppercase text-zinc-400 mt-1.5 leading-none hidden sm:block group-hover:text-[#0047BB]/60 transition-colors">게임 기획자 지망생</span>
-                </div>
+                <img src={LOGO_SRC} alt="로고" onLoad={() => setLogoOk(true)} onError={() => setLogoOk(false)}
+                  style={{ display: logoOk ? 'block' : 'none' }}
+                  className="h-10 md:h-12 w-auto max-w-[220px] object-contain transition-transform group-hover:scale-[1.03]" />
+                {!logoOk && (
+                  <>
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-linear-to-br from-[#0047BB] to-[#003080] text-white flex items-center justify-center shadow-lg shadow-[#0047BB]/25 transition-all group-hover:scale-105 group-hover:shadow-[#0047BB]/40 group-hover:shadow-xl">
+                      <Home className="w-5 h-5 md:w-6 md:h-6 transition-transform group-hover:-translate-y-0.5" strokeWidth={2} />
+                    </div>
+                    <div className="flex flex-col justify-center">
+                      <span className="font-display font-bold tracking-tight text-[16px] md:text-[18px] text-[#2C2C2C] group-hover:text-[#0047BB] transition-colors leading-none">홍길동</span>
+                      <span className="text-[10px] md:text-[11px] font-mono tracking-widest uppercase text-zinc-400 mt-1.5 leading-none hidden sm:block group-hover:text-[#0047BB]/60 transition-colors">게임 기획자 지망생</span>
+                    </div>
+                  </>
+                )}
                 {isEditing && (
                   <span className="ml-2 px-2 py-1 bg-[#0047BB]/10 border border-[#0047BB]/30 rounded text-[10px] text-[#0047BB] font-bold uppercase tracking-wider">
                     Edit
@@ -160,12 +170,14 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
             {/* Document shortcut pill (Always show for both Home and Sub-views) */}
             <div className="hidden xl:flex bg-zinc-100/80 p-1.5 rounded-full border border-black/5 shadow-inner">
               {[
+                { key: 'home', label: '마인드맵', icon: React.createElement(Home, { className: "w-4 h-4" }) },
                 { key: 'resume', label: '이력서', icon: React.createElement(FileText, { className: "w-4 h-4" }) },
+                { key: 'cover-letter', label: '자기소개서', icon: React.createElement(User, { className: "w-4 h-4" }) },
                 { key: 'portfolio', label: '포트폴리오', icon: React.createElement(FolderOpen, { className: "w-4 h-4" }) },
                 { key: 'game-history', label: '게이밍DNA', icon: React.createElement(Gamepad2, { className: "w-4 h-4" }) },
               ].map(item => (
                 <button key={item.key} onClick={() => { setView(item.key as any); window.scrollTo(0, 0); }}
-                  className={`w-[125px] py-2.5 rounded-full text-[14px] font-bold tracking-wide transition-all duration-300 flex items-center justify-center gap-2 ${currentView === item.key || (currentView === 'cover-letter' && item.key === 'resume') ? 'bg-white text-[#0047BB] shadow-md pointer-events-none' : 'text-zinc-500 hover:text-[#2C2C2C] hover:bg-white hover:shadow-sm'}`}>
+                  className={`px-4 py-2.5 rounded-full text-[13px] font-bold tracking-tight transition-all duration-300 flex items-center justify-center gap-1.5 whitespace-nowrap ${currentView === item.key ? 'bg-white text-[#0047BB] shadow-md pointer-events-none' : 'text-zinc-500 hover:text-[#2C2C2C] hover:bg-white hover:shadow-sm'}`}>
                   {item.icon}
                   <span>{item.label}</span>
                 </button>
@@ -203,9 +215,11 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
               <div className="bg-zinc-50 rounded-2xl p-4 flex flex-col gap-2">
                 <span className="text-[10px] font-mono tracking-widest uppercase text-zinc-500 mb-2">Documents</span>
                 {[
-                  { key: 'resume', label: '이력서 보기', icon: React.createElement(FileText, { className: "w-4 h-4" }) },
-                  { key: 'portfolio', label: '포트폴리오 갤러리', icon: React.createElement(FolderOpen, { className: "w-4 h-4" }) },
-                  { key: 'game-history', label: '게이밍DNA 보기', icon: React.createElement(Gamepad2, { className: "w-4 h-4" }) },
+                  { key: 'home', label: '마인드맵', icon: React.createElement(Home, { className: "w-4 h-4" }) },
+                  { key: 'resume', label: '이력서', icon: React.createElement(FileText, { className: "w-4 h-4" }) },
+                  { key: 'cover-letter', label: '자기소개서', icon: React.createElement(User, { className: "w-4 h-4" }) },
+                  { key: 'portfolio', label: '포트폴리오', icon: React.createElement(FolderOpen, { className: "w-4 h-4" }) },
+                  { key: 'game-history', label: '게이밍DNA', icon: React.createElement(Gamepad2, { className: "w-4 h-4" }) },
                 ].map(item => (
                   <button key={item.key} onClick={() => { setView(item.key as any); setIsMenuOpen(false); window.scrollTo(0, 0); }}
                     className={`text-left font-bold text-[14px] flex items-center gap-3 p-3 rounded-xl transition-all duration-300 ${currentView === item.key ? 'bg-white text-[#0047BB] shadow-sm' : 'text-zinc-600 hover:bg-[#0047BB] hover:text-white'}`}>

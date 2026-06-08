@@ -92,9 +92,13 @@ function App() {
   const [returnScrollY, setReturnScrollY] = useState<number>(0);
 
   const changeView = (newView: ViewType) => {
-    const isResumeTransition = 
-      (view === 'resume' || view === 'cover-letter') && 
+    const isResumeTransition =
+      (view === 'resume' || view === 'cover-letter') &&
       (newView === 'resume' || newView === 'cover-letter');
+
+    // 내비에서 이력서/자기소개서로 직접 이동 시 탭 상태 동기화
+    if (newView === 'resume') setResumeTab('resume');
+    else if (newView === 'cover-letter') setResumeTab('cover-letter');
 
     if (view === 'home' && newView !== 'home') {
       setReturnScrollY(window.scrollY);
