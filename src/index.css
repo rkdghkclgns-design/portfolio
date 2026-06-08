@@ -1,0 +1,414 @@
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Pretendard", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Pretendard", "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --color-brand-primary: #a1a1aa; /* Zinc 400 */
+  --color-brand-secondary: #d4d4d8; /* Zinc 300 */
+  --color-bg-main: #FDFCF8; /* Analog Cream Paper */
+}
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+body {
+  @apply bg-bg-main text-[#111111] font-sans antialiased selection:bg-[#800020] selection:text-bg-main;
+  background-color: #FDFCF8;
+  background-image: url('https://www.transparenttextures.com/patterns/cream-paper.png');
+  background-blend-mode: multiply;
+  transition: background-color 0.5s ease, color 0.5s ease;
+  line-height: 1.7;
+  letter-spacing: -0.01em;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+h1, h2, h3, h4, h5, h6 {
+  @apply font-display tracking-tight;
+  word-break: keep-all;
+}
+
+@layer utilities {
+  .glass {
+    background-color: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 4px 24px -1px rgba(0, 0, 0, 0.05);
+  }
+  
+  .glass-hover {
+    transition: all 0.3s ease-out;
+  }
+  .glass-hover:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-color: rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .text-gradient {
+    @apply text-zinc-800; /* Solid editorial look */
+  }
+
+  .bento-card {
+    background-color: #ffffff;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    border-radius: 1.25rem;
+    padding: 2rem;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    overflow: hidden;
+  }
+  .bento-card:hover {
+    border-color: rgba(0, 0, 0, 0.15);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .bg-grid {
+    background-size: 32px 32px;
+    background-image: 
+      linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  }
+
+  /* --- Section Divider Glow (Light Style) --- */
+  .section-glow {
+    position: relative;
+  }
+  .section-glow::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(128, 0, 32, 0.15), transparent);
+  }
+
+  /* --- Button System (Light) --- */
+  .btn-primary {
+    position: relative;
+    overflow: hidden;
+    background: #ffffff;
+    color: #2C2C2C;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-primary::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: #800020;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .btn-primary:hover::before {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+  .btn-primary:hover {
+    color: #fff;
+    border-color: #800020;
+    box-shadow: 0 8px 24px rgba(128, 0, 32, 0.2);
+  }
+
+  /* --- Notion-like Markdown Styles - Light Theme --- */
+  .markdown-body {
+    color: #3f3f46; /* zinc-700 */
+    line-height: 1.8;
+    font-size: 1rem;
+  }
+
+  .markdown-body h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: #18181b; /* zinc-900 */
+    border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    padding-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+
+  .markdown-body h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin-top: 1.75rem;
+    margin-bottom: 0.75rem;
+    color: #27272a; /* zinc-800 */
+    letter-spacing: -0.01em;
+  }
+
+  .markdown-body h3 {
+    font-size: 1.35rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.5rem;
+    color: #3f3f46; /* zinc-700 */
+  }
+
+  .markdown-body p {
+    margin-bottom: 1.25rem;
+  }
+
+  .markdown-body > *:last-child {
+    margin-bottom: 0 !important;
+  }
+
+  .markdown-body ul, .markdown-body ol {
+    margin-bottom: 1.25rem;
+    padding-left: 1.5rem;
+  }
+
+  .markdown-body ul { list-style-type: disc; }
+  .markdown-body ol { list-style-type: decimal; }
+  .markdown-body li { margin-bottom: 0.5rem; }
+
+  .markdown-body code {
+    background-color: rgba(128, 0, 32, 0.05); /* Burgundy tint */
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.375rem;
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+    color: #800020;
+    border: 1px solid rgba(128, 0, 32, 0.1);
+  }
+
+  .markdown-body pre {
+    background-color: #ffffff;
+    padding: 1.25rem;
+    border-radius: 0.75rem;
+    overflow-x: auto;
+    margin-bottom: 1.25rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-left: 3px solid #800020;
+  }
+
+  .markdown-body pre code {
+    background-color: transparent;
+    padding: 0;
+    color: #3f3f46;
+    border: none;
+  }
+
+  .markdown-body blockquote {
+    border-left: 4px solid #800020; /* Burgundy */
+    padding: 1rem 1rem 1rem 1.5rem;
+    font-style: italic;
+    color: #52525b; /* zinc-500 */
+    margin-bottom: 1.25rem;
+    background-color: rgba(128, 0, 32, 0.02);
+    border-radius: 0 0.5rem 0.5rem 0;
+  }
+
+  .markdown-body hr {
+    border: 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    margin: 2.5rem 0;
+  }
+
+  /* ── About 섹션 p1: bold → 파란색 강조 ── */
+  .markdown-strong-blue strong {
+    color: #0047BB !important;
+    font-weight: 900 !important;
+  }
+
+  /* ── About 섹션 p2: bold → 진한 회색 강조 ── */
+  .markdown-strong-dark strong {
+    color: #1A1A1A !important;
+    font-weight: 700 !important;
+  }
+}
+
+/* --- Light custom scrollbar --- */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(128, 0, 32, 0.5);
+}
+
+@layer utilities {
+  .animate-bg-pan {
+    animation: bg-pan 3s linear infinite;
+  }
+}
+
+@keyframes bg-pan {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: 40px 0;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════
+   PRINT / PDF STYLES  —  window.print() 전용
+   브라우저 네이티브 인쇄 엔진 → oklch / 웹폰트 완벽 지원
+   ══════════════════════════════════════════════════════════ */
+
+/* 화면(screen) 모드에서는 인쇄용 Portal 완전 숨김 */
+@media screen {
+  #print-root-wrapper {
+    display: none !important;
+  }
+}
+
+/* 규칙 1: @page — A4 크기, 여백 0, 배율 100% 강제 */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@media print {
+  /* 규칙 2: html/body 기본 리셋 */
+  html,
+  body {
+    width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+
+  /* 규칙 5: 배경 + 색상 강제 인쇄 */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ── 규칙 3: 화면 UI 완전 숨김 ──
+     #root 전체(앱 화면)를 숨기고 #print-root-wrapper만 표시
+     → footer/nav/관리자버튼이 자동으로 인쇄에 포함되지 않음 */
+  #root {
+    display: none !important;
+  }
+
+  /* 규칙 6: print-root-wrapper 표시 */
+  #print-root-wrapper {
+    display: block !important;
+    visibility: visible !important;
+    position: static !important;
+    width: 210mm !important;
+    max-width: 210mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    overflow: visible !important;
+  }
+
+  /* 규칙 4: 페이지 경계 — 사이에만 break, 마지막에는 break 없음 */
+  .pdf-page {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 210mm !important;
+    min-height: 297mm !important;
+    max-height: none !important;
+    box-sizing: border-box !important;
+    padding: 15mm !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    position: relative !important;
+  }
+
+  .pdf-page + .pdf-page {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+
+  .pdf-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
+  }
+
+  /* ── 검은 박스 버그 수정 ──
+     bg-clip-text + text-transparent → 인쇄 시 검은 박스 현상 방지
+     Tailwind gradient text 클래스 전부 초기화 */
+  [class*="bg-clip-text"],
+  [class*="text-transparent"] {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: #1a1a1a !important;
+    -webkit-text-fill-color: #1a1a1a !important;
+  }
+
+  /* oklch 폴백: 혹시 oklch 색상이 남아있을 경우 대비 */
+  [style*="background-clip: text"],
+  [style*="-webkit-background-clip: text"] {
+    background: none !important;
+    -webkit-background-clip: initial !important;
+    background-clip: initial !important;
+    color: #1a1a1a !important;
+    -webkit-text-fill-color: #1a1a1a !important;
+  }
+
+  /* ── 검은 박스 버그 추가 안전장치 ──
+     EditableText의 <input>/<textarea>가 시스템 다크모드로 렌더되는 것 방지
+     (setIsEditing(false)로 이미 span으로 전환되지만 혹시 모를 경우를 대비) */
+  html { color-scheme: light !important; }
+
+  body.printing input,
+  body.printing textarea,
+  body.printing [contenteditable] {
+    all: unset !important;
+    display: inline !important;
+    color: #1a1a1a !important;
+    background: transparent !important;
+  }
+
+  input, textarea, select {
+    background: transparent !important;
+    background-color: transparent !important;
+    color: #1a1a1a !important;
+    border: none !important;
+    box-shadow: none !important;
+    -webkit-text-fill-color: #1a1a1a !important;
+    color-scheme: light !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+  }
+
+  /* Framer Motion 및 조상 요소의 페이지 브레이크 킬러(transform/overflow) 제거
+     주의: 전체 div가 아닌 필요한 조상 요소만 타겟팅 */
+  #print-root-wrapper, #print-root, 
+  .motion-safe-print, [style*="translate"] {
+    transform: none !important;
+    overflow: visible !important;
+    contain: none !important;
+    position: static !important;
+  }
+
+  /* ── A4 배율 100% 강제 ──
+     화면용 max-w-[1300px] 등이 인쇄에 적용되어 자동 축소(71%)되는 것 방지.
+     #print-root-wrapper 내부는 이미 210mm 고정이므로 html/body만 리셋하면 됨 */
+  html, body {
+    width: 210mm !important;
+    max-width: 210mm !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    overflow: visible !important;
+  }
+}
+
