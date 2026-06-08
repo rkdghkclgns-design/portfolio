@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { Navbar } from './components/Navbar';
-import { Hero } from './components/Hero';
+import { MindMap } from './components/MindMap';
 import { About } from './components/About';
 import { Projects } from './components/Projects';
 import { Portfolio } from './components/Portfolio';
@@ -225,7 +225,7 @@ function App() {
 
       {view === 'home' && (
         <main className="relative">
-          <Hero onPortfolioClick={() => changeView('portfolio')} onResumeClick={() => changeView('resume')} isEditing={isEditing} content={heroContent} setContent={setHeroContent} aboutContent={aboutContent} setAboutContent={setAboutContent} />
+          <MindMap onPortfolioClick={() => changeView('portfolio')} onResumeClick={() => changeView('resume')} />
           <About isEditing={isEditing} content={aboutContent} setContent={setAboutContent} />
           <Projects onProjectClick={(p) => { setTargetProjectId(p.id); changeView('portfolio'); }} isEditing={isEditing} projects={projectsData} setProjects={setProjectsData} limit={3} setView={changeView} />
           <Skills isEditing={isEditing} skills={skillsData} setSkills={setSkillsData} />
