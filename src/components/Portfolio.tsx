@@ -52,6 +52,7 @@ function buildPortfolioHtml(projects: Project[], title: string): string {
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230047BB'/%3E%3Cpath d='M32 23 L20 43 M32 23 L44 43' stroke='%23fff' stroke-width='3' stroke-linecap='round'/%3E%3Ccircle cx='32' cy='22' r='6.5' fill='%23fff'/%3E%3Ccircle cx='20' cy='44' r='5.5' fill='%23fff'/%3E%3Ccircle cx='44' cy='44' r='5.5' fill='%23fff'/%3E%3C/svg%3E" />
 <title>${safeTitle}</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css" />
 <style>
