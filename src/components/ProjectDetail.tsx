@@ -428,7 +428,12 @@ def calculate_balance(params):
             >
               {/* Full-bleed Hero */}
               <div className="relative h-[340px] shrink-0 overflow-hidden">
-                <img src={project.image} alt={project.title} className="w-full h-full object-cover transition-transform duration-700 hover:scale-[1.03]" />
+                <img
+                  src={project.image || (((import.meta as any).env?.BASE_URL || '/') + 'images/logo.png')}
+                  alt={project.title}
+                  onError={(e) => { const t = e.currentTarget; if (!t.src.endsWith('logo.svg')) t.src = ((import.meta as any).env?.BASE_URL || '/') + 'images/logo.svg'; }}
+                  className={`w-full h-full transition-transform duration-700 hover:scale-[1.03] ${project.image ? 'object-cover' : 'object-contain p-16 bg-zinc-100'}`}
+                />
                 <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent" />
                 <div className="absolute top-6 left-8 flex flex-wrap gap-2">
                   {project.roles.map(role => (

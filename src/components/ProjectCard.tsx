@@ -2,7 +2,12 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { ArrowRight, X, MousePointer2 } from 'lucide-react';
 import { EditableText } from './EditableText';
+import { EditImageButton } from './editKit';
 import type { Project } from '../types';
+
+// 기본(빈) 프로젝트 이미지는 로고로 대체
+const DEFAULT_IMG = ((import.meta as any).env?.BASE_URL || '/') + 'images/logo.png';
+const LOGO_FALLBACK = ((import.meta as any).env?.BASE_URL || '/') + 'images/logo.svg';
 
 interface ProjectCardProps {
   project: Project;
@@ -17,12 +22,14 @@ interface ProjectCardProps {
 export const ProjectCard = ({ project, idx, isEditing, projects, setProjects, onProjectClick, layout = 'default' }: ProjectCardProps) => {
   const isActive = layout === 'accordion-active';
   const isInactive = layout === 'accordion-inactive';
+  const setImg = (url: string) => { const p = [...projects]; p[idx].image = url; setProjects(p); };
+  const onImgError = (e: React.SyntheticEvent<HTMLImageElement>) => { const t = e.currentTarget; if (!t.src.endsWith('logo.svg')) t.src = LOGO_FALLBACK; };
   
   if (isActive || isInactive) {
     return (
       <div className="relative w-full h-full flex flex-col justify-end p-6 lg:p-10">
         <div className={`absolute inset-0 ${isActive ? 'opacity-100' : 'opacity-40 group-hover:opacity-80'} transition-opacity duration-700`}>
-          <img src={project.image} alt={project.title} className={`w-full h-full object-cover ${isInactive ? 'object-top' : ''}`} referrerPolicy="no-referrer" />
+          <img src={project.image || DEFAULT_IMG} alt={project.title} onError={onImgError} className={`w-full h-full ${project.image ? 'object-cover' : 'object-contain p-8'} ${isInactive ? 'object-top' : ''}`} referrerPolicy="no-referrer" />
           <div className="absolute inset-0 bg-linear-to-t from-black/95 via-black/40 to-transparent"></div>
         </div>
         
@@ -77,7 +84,12 @@ export const ProjectCard = ({ project, idx, isEditing, projects, setProjects, on
       )}
       
       <div className="overflow-hidden relative bg-zinc-50 shrink-0 aspect-16/10 border-b border-zinc-100">
-        <img src={project.image} alt={project.title} className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 absolute inset-0" referrerPolicy="no-referrer" />
+        <img src={project.image || DEFAULT_IMG} alt={project.title} onError={onImgError} className={`w-full h-full absolute inset-0 transition-transform duration-1000 group-hover:scale-110 ${project.image ? 'object-cover' : 'object-contain p-8 bg-zinc-50'}`} referrerPolicy="no-referrer" />
+        {isEditing && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30" onClick={(e) => e.stopPropagation()}>
+            <EditImageButton onPick={setImg} label="이미지 변경" maxW={1000} maxH={700} />
+          </div>
+        )}
         
         {/* Hover Overlay */}
         <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700 flex items-center justify-center z-20">
