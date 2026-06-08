@@ -4,7 +4,8 @@ import { Plus, Download, RotateCcw, ChevronRight, ArrowUpRight } from 'lucide-re
 /**
  * MindMap — 자기 성찰용 마인드맵 캔버스 (홈 첫 화면)
  * - 스킬/장점/단점/가치관/목표 등 카테고리별 노드 추가
- * - 드래그 이동, 더블클릭 편집, ✕ 삭제
+ * - 노드마다 + 버튼으로 하위 토픽(자식) 추가 (가지 색 상속, 다단계 가능)
+ * - 드래그 이동, 더블클릭 편집, ✕ 삭제(하위 토픽 포함)
  * - localStorage 자동 저장
  * - PNG 내보내기 (순수 SVG → Canvas, 외부 의존성 없음)
  */
@@ -14,7 +15,7 @@ interface MindMapProps {
   onPortfolioClick: () => void;
 }
 
-interface MNode { id: string; text: string; cat: string; x: number; y: number; }
+interface MNode { id: string; text: string; cat: string; x: number; y: number; parent: string; }
 interface MData { center: { text: string; x: number; y: number }; nodes: MNode[]; }
 
 const KEY = 'self_mindmap_v1';
@@ -75,9 +76,9 @@ function seed(w: number, h: number): MData {
   const ex: [string, string][] = [
     ['기획 역량', '스킬'], ['끈기', '장점'], ['완벽주의', '단점'], ['성장', '가치관'], ['게임 출시', '목표'],
   ];
-  const nodes = ex.map(([text, cat], i) => {
+  const nodes: MNode[] = ex.map(([text, cat], i) => {
     const a = i * 2.39996; const R = 175;
-    return { id: 'seed' + i, text, cat, x: clamp(cx + R * Math.cos(a), 70, w - 70), y: clamp(cy + R * Math.sin(a), 56, h - 56) };
+    return { id: 'seed' + i, text, cat, parent: 'center', x: clamp(cx + R * Math.cos(a), 70, w - 70), y: clamp(cy + R * Math.sin(a), 56, h - 56) };
   });
   return { center: { text: '나', x: cx, y: cy }, nodes };
 }
@@ -102,12 +103,18 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
     return () => ro.disconnect();
   }, []);
 
-  /* 데이터 초기화 (저장본 우선) */
+  /* 데이터 초기화 (저장본 우선, 구버전 호환: parent 없으면 center) */
   useEffect(() => {
     if (data || size.w === 0) return;
     try {
       const raw = localStorage.getItem(KEY);
-      if (raw) { const d = JSON.parse(raw); if (d && d.center && Array.isArray(d.nodes)) { setData(d); return; } }
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (d && d.center && Array.isArray(d.nodes)) {
+          d.nodes = d.nodes.map((n: any) => ({ ...n, parent: n.parent || 'center' }));
+          setData(d); return;
+        }
+      }
     } catch { /* ignore */ }
     setData(seed(size.w, size.h));
   }, [size, data]);
@@ -153,21 +160,52 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
       ? { ...prev, center: { ...prev.center, text } }
       : { ...prev, nodes: prev.nodes.map((n) => (n.id === id ? { ...n, text } : n)) }));
 
-  const addNode = () => {
-    setData((prev) => {
-      if (!prev) return prev;
-      const i = prev.nodes.length;
-      const a = i * 2.39996, R = 165 + (i % 4) * 24;
-      const x = clamp(prev.center.x + R * Math.cos(a), 70, size.w - 70);
-      const y = clamp(prev.center.y + R * Math.sin(a), 56, size.h - 56);
-      const id = 'n' + Date.now();
-      setTimeout(() => setEditing(id), 0);
-      return { ...prev, nodes: [...prev.nodes, { id, text: '', cat, x, y }] };
-    });
+  const posOf = (d: MData, id: string) => {
+    if (id === 'center' || !id) return d.center;
+    return d.nodes.find((n) => n.id === id) || d.center;
   };
 
+  /* 노드/하위 토픽 추가. parentId 'center'면 메인 가지(선택 카테고리), 아니면 부모 색 상속 */
+  const addChild = (parentId: string) => {
+    if (!data) return;
+    const isTop = parentId === 'center';
+    const parent = isTop ? data.center : data.nodes.find((n) => n.id === parentId);
+    if (!parent) return;
+    const nodeCat = isTop ? cat : (parent as MNode).cat;
+    const sibs = data.nodes.filter((n) => (n.parent || 'center') === parentId);
+    const cx = data.center.x, cy = data.center.y;
+    let angle: number, R: number;
+    if (isTop) {
+      angle = sibs.length * 2.39996; R = 165 + (sibs.length % 4) * 24;
+    } else {
+      const base = Math.atan2(parent.y - cy, parent.x - cx) || 0;
+      const k = sibs.length;
+      angle = base + (k % 2 === 0 ? 1 : -1) * Math.ceil((k + 1) / 2) * 0.5;
+      R = 125;
+    }
+    const ax = isTop ? cx : parent.x;
+    const ay = isTop ? cy : parent.y;
+    const x = clamp(ax + R * Math.cos(angle), 70, size.w - 70);
+    const y = clamp(ay + R * Math.sin(angle), 56, size.h - 56);
+    const id = 'n' + Date.now();
+    setData({ ...data, nodes: [...data.nodes, { id, text: '', cat: nodeCat, x, y, parent: parentId }] });
+    setEditing(id);
+  };
+
+  /* 노드 + 모든 하위 토픽 삭제 */
   const delNode = (id: string) => {
-    setData((prev) => (prev ? { ...prev, nodes: prev.nodes.filter((n) => n.id !== id) } : prev));
+    setData((prev) => {
+      if (!prev) return prev;
+      const toDel = new Set([id]);
+      let changed = true;
+      while (changed) {
+        changed = false;
+        for (const n of prev.nodes) {
+          if (!toDel.has(n.id) && toDel.has(n.parent || 'center')) { toDel.add(n.id); changed = true; }
+        }
+      }
+      return { ...prev, nodes: prev.nodes.filter((n) => !toDel.has(n.id)) };
+    });
     if (editing === id) setEditing(null);
   };
 
@@ -211,6 +249,25 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
     img.src = url;
   };
 
+  /* 작은 원형 버튼 (하위토픽 +, 삭제 ✕) — 화면 전용 */
+  const miniBtn = (
+    cx: number, cy: number, kind: 'add' | 'del', color: string, onClick: () => void, title: string,
+  ) => (
+    <g className="no-export" transform={`translate(${cx},${cy})`} style={{ cursor: 'pointer' }}
+      onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onClick(); }}>
+      <title>{title}</title>
+      {kind === 'add'
+        ? <>
+          <circle r={9} fill={color} stroke="#fff" strokeWidth={1.1} />
+          <path d="M0,-3.6 L0,3.6 M-3.6,0 L3.6,0" stroke="#fff" strokeWidth={1.7} strokeLinecap="round" />
+        </>
+        : <>
+          <circle r={9} fill="#fff" stroke={color} strokeWidth={1.2} />
+          <path d="M-3,-3 L3,3 M3,-3 L-3,3" stroke={color} strokeWidth={1.5} strokeLinecap="round" />
+        </>}
+    </g>
+  );
+
   /* 노드 렌더 */
   const renderNode = (n: MNode) => {
     const c = CAT_MAP[n.cat] || CAT_MAP['기타'];
@@ -222,13 +279,10 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
         <circle cx={-g.w / 2 + 11} cy={-g.h / 2 + 11} r={3.5} fill={c.color} />
         <text textAnchor="middle" dominantBaseline="middle" fontFamily={FONT} fontSize={g.fs} fontWeight={g.weight}
           fill="#1A2332" style={{ userSelect: 'none', pointerEvents: 'none' }}>
-          {g.lines.map((l, i) => (<tspan key={i} x={0} y={(i - (g.lines.length - 1) / 2) * g.lh}>{l || ' '}</tspan>))}
+          {g.lines.map((l, i) => (<tspan key={i} x={0} y={(i - (g.lines.length - 1) / 2) * g.lh}>{l || ' '}</tspan>))}
         </text>
-        <g className="no-export" transform={`translate(${g.w / 2 - 1},${-g.h / 2 + 1})`} style={{ cursor: 'pointer' }}
-          onPointerDown={(e) => e.stopPropagation()} onClick={() => delNode(n.id)}>
-          <circle r={9} fill="#fff" stroke={c.color} strokeWidth={1.2} />
-          <path d="M-3,-3 L3,3 M3,-3 L-3,3" stroke={c.color} strokeWidth={1.5} strokeLinecap="round" />
-        </g>
+        {miniBtn(g.w / 2 - 1, -g.h / 2 + 1, 'del', c.color, () => delNode(n.id), '삭제 (하위 토픽 포함)')}
+        {miniBtn(g.w / 2 - 1, g.h / 2 - 1, 'add', c.color, () => addChild(n.id), '하위 토픽 추가')}
       </g>
     );
   };
@@ -279,7 +333,7 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
             <span className="text-[#0047BB] text-[11px] font-black tracking-[0.25em] uppercase block mb-2">Self-Reflection · 자기 탐색</span>
             <h1 className="text-3xl md:text-5xl font-display font-bold text-[#1A2332] tracking-[-0.03em]">나를 그리는 마인드맵</h1>
             <p className="text-zinc-500 text-sm md:text-base mt-2 max-w-2xl break-keep">
-              스킬·장점·단점·가치관·목표 등 나를 이해하는 데 필요한 모든 것을 추가하고, 끌어다 배치한 뒤 PNG로 내보내세요.
+              스킬·장점·단점·가치관·목표 등 나를 이해하는 데 필요한 모든 것을 추가하고, 하위 토픽으로 가지를 뻗은 뒤 PNG로 내보내세요.
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
@@ -303,9 +357,9 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
               {c.key}
             </button>
           ))}
-          <button onClick={addNode}
+          <button onClick={() => addChild('center')}
             className="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#1A2332] text-white flex items-center gap-1 hover:bg-black transition">
-            <Plus className="w-3.5 h-3.5" /> 노드 추가
+            <Plus className="w-3.5 h-3.5" /> 주제 추가
           </button>
           <div className="flex-1 min-w-[8px]" />
           <button onClick={exportPng}
@@ -327,10 +381,11 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
               viewBox={`0 0 ${size.w} ${size.h}`} className="absolute inset-0" style={{ touchAction: 'none' }}>
               {/* 배경 (PNG 포함) */}
               <rect x={0} y={0} width={size.w} height={size.h} fill="#F4F2EC" />
-              {/* 연결선 */}
+              {/* 연결선 (부모 → 자식) */}
               {data.nodes.map((n) => {
                 const c = CAT_MAP[n.cat] || CAT_MAP['기타'];
-                return <line key={'l' + n.id} x1={data.center.x} y1={data.center.y} x2={n.x} y2={n.y} stroke={c.color} strokeOpacity={0.45} strokeWidth={2} />;
+                const p = posOf(data, n.parent || 'center');
+                return <line key={'l' + n.id} x1={p.x} y1={p.y} x2={n.x} y2={n.y} stroke={c.color} strokeOpacity={0.42} strokeWidth={2} />;
               })}
               {/* 노드 */}
               {data.nodes.map(renderNode)}
@@ -340,8 +395,9 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
                 <rect x={-cg.w / 2} y={-cg.h / 2} width={cg.w} height={cg.h} rx={14} fill="#1A2332" stroke="#0047BB" strokeWidth={2.5} />
                 <text textAnchor="middle" dominantBaseline="middle" fontFamily={FONT} fontSize={cg.fs} fontWeight={cg.weight}
                   fill="#ffffff" style={{ userSelect: 'none', pointerEvents: 'none' }}>
-                  {cg.lines.map((l, i) => (<tspan key={i} x={0} y={(i - (cg.lines.length - 1) / 2) * cg.lh}>{l || ' '}</tspan>))}
+                  {cg.lines.map((l, i) => (<tspan key={i} x={0} y={(i - (cg.lines.length - 1) / 2) * cg.lh}>{l || ' '}</tspan>))}
                 </text>
+                {miniBtn(cg.w / 2 - 1, cg.h / 2 - 1, 'add', '#0047BB', () => addChild('center'), '주제(가지) 추가')}
               </g>
             </svg>
           )}
@@ -350,13 +406,13 @@ export const MindMap = ({ onResumeClick, onPortfolioClick }: MindMapProps) => {
 
           {data && data.nodes.length === 0 && (
             <div className="absolute inset-0 flex items-end justify-center pb-10 pointer-events-none">
-              <span className="text-zinc-400 text-sm">카테고리를 고르고 <b className="text-zinc-500">‘노드 추가’</b>를 눌러 시작하세요.</span>
+              <span className="text-zinc-400 text-sm">카테고리를 고르고 <b className="text-zinc-500">‘주제 추가’</b>를 눌러 시작하세요.</span>
             </div>
           )}
         </div>
 
         <p className="text-[11px] text-zinc-400 mt-2">
-          노드 <b className="text-zinc-500">더블클릭</b> 편집 · <b className="text-zinc-500">드래그</b> 이동 · <b className="text-zinc-500">✕</b> 삭제 · 내용은 이 브라우저에 자동 저장됩니다.
+          노드 <b className="text-zinc-500">더블클릭</b> 편집 · <b className="text-zinc-500">드래그</b> 이동 · <b className="text-zinc-500">＋</b> 하위 토픽 · <b className="text-zinc-500">✕</b> 삭제 · 내용은 이 브라우저에 자동 저장됩니다.
         </p>
       </div>
     </section>
