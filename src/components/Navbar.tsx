@@ -34,7 +34,7 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
   // 로고: 사용자 logo.png(있으면) → 오리지널 logo.svg → 이름 순으로 표시
   const [logoOk, setLogoOk] = useState(false);
   const LOGO_BASE = ((import.meta as any).env?.BASE_URL || '/') + 'images/';
-  const LOGO_SRCS = [LOGO_BASE + 'logo.png', LOGO_BASE + 'logo.svg'];
+  const LOGO_SRCS = [LOGO_BASE + 'logo.png?v=2', LOGO_BASE + 'logo.svg?v=2'];
   const [logoIdx, setLogoIdx] = useState(0);
 
   const isSubView = currentView !== 'home';
