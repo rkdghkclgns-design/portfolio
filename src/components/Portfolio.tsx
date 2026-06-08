@@ -216,7 +216,8 @@ export const Portfolio = ({ isEditing, projects, setProjects, onBack, initialPro
     : projects.filter(p => p.roles && p.roles.includes(activeCategory));
 
   const handleExportHtml = () => {
-    const title = (typeof document !== 'undefined' && document.title) ? document.title : '포트폴리오';
+    // 내보내는 포트폴리오 파일은 결과물이므로 도구 명칭이 아닌 '포트폴리오' 제목 사용
+    const title = '포트폴리오';
     const html = buildPortfolioHtml(projects, title);
     const fname = title.replace(/\s*\|\s*/g, '_').replace(/\s+/g, '_').replace(/[\\/:*?"<>]/g, '') + '.html';
     downloadFile(fname, html, 'text/html;charset=utf-8');
