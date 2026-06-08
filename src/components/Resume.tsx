@@ -104,7 +104,7 @@ export const Resume = ({ setView, onBack, isEditing, data, setData, activeTab, i
 
               <main className="lg:col-span-8 p-8 lg:p-10 bg-white">
                 <ResumeExperience data={data} setData={setData} isEditing={isEditing} />
-                <ResumeTools data={data} />
+                <ResumeTools data={data} setData={setData} isEditing={isEditing} />
               </main>
             </div>
           </motion.div>

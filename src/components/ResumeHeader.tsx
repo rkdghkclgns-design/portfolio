@@ -1,6 +1,7 @@
 import React from 'react';
 import { Mail, Phone, Calendar, MapPin, Shield } from 'lucide-react';
 import { EditableText } from './EditableText';
+import { EditImageButton } from './editKit';
 import type { ResumeData } from '../types';
 
 interface ResumeHeaderProps {
@@ -16,12 +17,17 @@ export const ResumeHeader = ({ data, setData, isEditing, isGeneratingPdf }: Resu
       {/* Portrait Frame */}
       <div className="relative shrink-0">
         <div className="w-48 lg:w-52 rounded-sm overflow-hidden border border-black/10 shadow-xl bg-white">
-          <img 
-            src={data.image || "https://picsum.photos/seed/profile/600/800"} 
-            alt="Profile" 
-            className="w-full h-auto object-contain block" 
+          <img
+            src={data.image || "https://picsum.photos/seed/profile/600/800"}
+            alt="Profile"
+            className="w-full h-auto object-contain block"
           />
         </div>
+        {isEditing && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2">
+            <EditImageButton onPick={(url) => setData({ ...data, image: url })} label="사진 변경" maxW={600} maxH={760} />
+          </div>
+        )}
       </div>
 
       {/* Identity & Summary */}
@@ -48,12 +54,14 @@ export const ResumeHeader = ({ data, setData, isEditing, isGeneratingPdf }: Resu
               </span>
             </div>
           </div>
-          {data.birthDate && (
+          {(isEditing || data.birthDate) && (
             <div className="flex items-center gap-2.5 group">
               <Calendar className="w-4 h-4 text-[#0047BB] shrink-0" strokeWidth={2} />
               <div className="flex flex-col">
                 <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">생년월일</span>
-                <span className="text-[13px] text-[#1A1A1A] font-semibold">{data.birthDate}</span>
+                <span className="text-[13px] text-[#1A1A1A] font-semibold">
+                  <EditableText value={data.birthDate || ''} onSave={(v) => setData({ ...data, birthDate: v })} isEditing={isEditing} />
+                </span>
               </div>
             </div>
           )}
@@ -79,12 +87,23 @@ export const ResumeHeader = ({ data, setData, isEditing, isGeneratingPdf }: Resu
               </div>
             </div>
           )}
-          {data.military && (
+          {(isEditing || data.military) && (
             <div className="flex items-center gap-2.5 group">
               <Shield className="w-4 h-4 text-[#0047BB] shrink-0" strokeWidth={2} />
               <div className="flex flex-col">
                 <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-widest">병역</span>
-                <span className="text-[13px] text-[#1A1A1A] font-semibold">{data.military.branch} {data.military.rank} {data.military.status}</span>
+                {isEditing ? (
+                  <div className="flex gap-1 flex-wrap mt-0.5">
+                    {(['branch', 'rank', 'status'] as const).map((f) => (
+                      <input key={f} value={(data.military as any)?.[f] || ''}
+                        placeholder={f === 'branch' ? '군별' : f === 'rank' ? '계급' : '상태'}
+                        onChange={(e) => setData({ ...data, military: { branch: '', role: '', rank: '', status: '', ...(data.military || {}), [f]: e.target.value } })}
+                        className="w-16 border border-zinc-300 rounded px-1.5 py-0.5 text-[12px] bg-white text-[#1A1A1A] focus:border-[#0047BB] focus:outline-none" />
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-[13px] text-[#1A1A1A] font-semibold">{data.military!.branch} {data.military!.rank} {data.military!.status}</span>
+                )}
               </div>
             </div>
           )}
