@@ -172,7 +172,7 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
           {/* ── RIGHT ── */}
           <div className="flex items-center justify-end gap-3 shrink-0 min-w-[200px]">
             {/* Document shortcut pill (Always show for both Home and Sub-views) */}
-            <div className="hidden xl:flex bg-zinc-100/80 p-1.5 rounded-full border border-black/5 shadow-inner">
+            <div className="hidden lg:flex bg-zinc-100/80 p-1.5 rounded-full border border-black/5 shadow-inner">
               {[
                 { key: 'home', label: '마인드맵', icon: React.createElement(Home, { className: "w-4 h-4" }) },
                 { key: 'resume', label: '이력서', icon: React.createElement(FileText, { className: "w-4 h-4" }) },
@@ -187,7 +187,7 @@ export const Navbar = ({ setView, currentView, onNavClick, isEditing, setIsEditi
                 </button>
               ))}
             </div>
-            <div className="hidden xl:block w-px h-8 bg-black/10 mx-1.5" />
+            <div className="hidden lg:block w-px h-8 bg-black/10 mx-1.5" />
             
             <div className="flex items-center">
               <button

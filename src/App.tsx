@@ -179,7 +179,8 @@ function App() {
   // pdfButton 삭제됨
   // centerSlot
   const centerSlot = (() => {
-    if (view === 'resume' || view === 'cover-letter') {
+    // 상단 중앙 이력서/자기소개서 토글 제거 — 우측 내비(이력서/자기소개서)와 중복되어 겹침 발생
+    if (false) {
       return (
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 inline-flex bg-zinc-100/80 backdrop-blur-md p-1 rounded-full border border-black/5 shadow-inner">
           {(['resume', 'cover-letter'] as const).map((tab) => (
